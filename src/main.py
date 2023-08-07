@@ -1,6 +1,6 @@
-from preprocessing import preprocess_games
-# from model import build, train, load
-# from minimax import minimax_decide
+# from preprocessing import preprocess_games
+# from model import build_model, train_model, load_model
+# from minimax import minimax
 
 def main():
     pass

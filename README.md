@@ -21,6 +21,14 @@ This project was inspired by Sebastian Lague and his chess series as well as fro
 - Also trained a model based on my own Lichess games.
 - Evaluation and playing against human or computer opponents to determine ELO.
 
+## Data Source
+
+The game data used in this project was obtained from [lichess open databases](https://database.lichess.org/). I used May 2023 in order to have over 100 million games which I split for 80% training and 20% testing. I also data obtained all my games that I played on my Lichess account (SteveMAlt) to build a model based on my playing style. However, my data set is much smaller than the open databases.
+
+## Exploratory Data Analysis
+
+Before building the model, I performed some exploratory data analysis on the pgn files in order to get an idea of the data and how to build a streamlined pipline for the data science process. I analyzed basic statistics on the games played as well as viewed the distribution of the player ratings. You can find more from the exploratory data analysis notebook. <!-- as well as in the pdf uploaded in my website. NOT COMPLETED YET --> 
+
 ## Installation
 
 Clone the repository and install the required dependencies:
@@ -34,6 +42,8 @@ pip install -r requirements.txt
 ## Usage
 
 Still a WIP.
+
+
 ## Contributing
 
 Contributions are welcome, feel free to clone the repository and make your own changes!

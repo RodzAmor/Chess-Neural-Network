@@ -23,11 +23,11 @@ The Chess Neural Network is a machine learning based chess engine that uses a ne
 
 Clone the repository and install the required dependencies:
 
-\`\`\`bash
+```bash
 git clone https://github.com/yourusername/chess-bot.git
 cd chess-neural-network
 pip install -r requirements.txt
-\`\`\`
+```
 
 ## Usage
 

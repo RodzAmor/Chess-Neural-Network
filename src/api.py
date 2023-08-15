@@ -21,5 +21,5 @@ def make_move():
 
     return jsonify(success=True, uci=move.uci(), game_over=board.is_game_over())
 
-if __name__ == "__main__":
-    app.run()
+# if __name__ == "__main__":
+#     app.run()

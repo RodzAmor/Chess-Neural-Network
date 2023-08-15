@@ -3,3 +3,4 @@ api2.py
 processed/
 raw/
 venv/
+.vercel

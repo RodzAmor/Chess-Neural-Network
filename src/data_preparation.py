@@ -10,7 +10,7 @@ def load_data(board_path, evals_path):
 
 
 """
-
+Splits data based on the test size. By default the test size is 15% of the data.
 """
 def split_data(boards, evals, test_size=0.15):
     X_train, X_test, y_train, y_test = train_test_split(boards, evals, test_size=test_size)

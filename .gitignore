@@ -1,5 +1,5 @@
 README2.md
 api2.py
-processed/
-raw/
-venv/
+processed/*
+raw/*
+venv/*

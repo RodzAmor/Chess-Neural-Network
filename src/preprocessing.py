@@ -1,6 +1,18 @@
+from concurrent.futures import ThreadPoolExecutor
+# from concurrent.futures import ProcessPoolExecutor
 import chess.pgn
+import chess.engine
 import numpy as np
 import pandas as pd
+import re
+import logging
+from tqdm import tqdm # For progress bar
+import threading
+import os # Used for tracking the # of processes in multi-process execution
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+games_evaluated = 0
+
 
 """
 Reads a PGN file and extracts each game
@@ -12,6 +24,7 @@ Default is to process every game. Set the value of num_games in order to
 """
 # @returns  list of games
 def process_pgn(file_path, num_games=float('inf')):
+    logging.info(f"Processing PGN at {file_path}")
     games = []
 
     with open(file_path) as pgn:
@@ -26,37 +39,165 @@ def process_pgn(file_path, num_games=float('inf')):
 
     return games
 
+
 """
 Encodes the board into an 8x8 shape so that it can be processed
 Need to convert the board into a format that can be used in a neural network
+
+Board is represented with a shape of (8,8,13) for an 8x8 grid with 13 possible states including the empty state
+
+@return numpy dataframe with shape (8, 8, 13)
 """
 def encode_board(board):
-    pass
+    # P - Pawn, R - Rook, B - Bishop, N - Knight, Q - Queen, K - King
+    # 6 black pieces + 6 white pieces + 1 empty slot = 13 possible tile states
+    # As a result, the shape of each board state is 8x8x13 for the 8x8 grid and 13 possible states
+    white_pieces = {piece: index for index, piece in enumerate("PRNBQK")}
+    black_pieces = {piece: index + 5 for index, piece in enumerate("prnbqk")}
+    all_pieces = white_pieces | black_pieces # Concatenate the two dictionaries
+
+    encoded_board = np.zeros((8, 8, 13))
+
+    # Fill the values of each tensor
+    for i in range(8):
+        for j in range(8):
+            piece = board.piece_at(chess.square(j, 7 - i))
+
+            if piece != None:
+                encoded_board[i, j, all_pieces[piece.symbol()]] = 1
+            else:
+                encoded_board[i, j, 12] = 1
+
+    return encoded_board
+    
 
 """
-Return the labels from the game such as the eval or outcome (win, loss, draw, stalemate)
+Return the evaluation score to be used as labels
+The evaluation is provided in the pgn from the lichess database which uses stockfish.
 """
-def extract_game_labels(game):
-    pass
+def extract_eval(board_state, label):
+    eval = re.search(r'\[%eval (.*?)\]', label)
+
+    if eval != None:
+        return float(eval.group(1))
+    else:
+        return get_stockfish_eval(board_state)
+
+
+"""
+Uses the stockfish engine as of August 2023 for games that do not have the stockfish evaluation included already into the pgn.
+
+@param the board state
+@return float of stockfish evaluation score from white's perspective
+"""
+def get_stockfish_eval(board):
+    stockfish = "/opt/homebrew/bin/stockfish"
+    eval_time = 0.1 # Feel free to modify for longer evaluation of positions
+
+    with chess.engine.SimpleEngine.popen_uci(stockfish) as engine:
+        eval = engine.analyse(board, chess.engine.Limit(time=eval_time))
+        global games_evaluated
+        games_evaluated += 1
+
+        score = eval['score'].relative.score(mate_score=1000)
+        # logging.info(f"Performing Stockfish evaluation: {games_evaluated} board states evaluated. Eval: {score}")
+        
+        return score
+    
+
 """
 Extracts a list of games and creates a pandas dataframe
-Saves it into a csv for further processing
+Saves it into a csv for further processing. Single-threaded implementation.
 
-Example: preprocess_games('data/raw/sample.pgn', 'data/raw/sample.csv')
+Example: single_thread_preprocess_games('data/raw/sample.pgn', 'data/raw/sample.csv')
 """
-def preprocess_games(file_path, save_path, num_games=float('inf')):
-    games = process_pgn(file_path, num_games)
+def single_thread_preprocess_games(file_path, save_path, num_games=float('inf')):
+    logging.info(f"Prepreoccesing PGN at {file_path} to save a csv at {save_path}")
 
+    games = process_pgn(file_path, num_games)
     data = []
 
-    for game in games:
+    for game in tqdm(games, desc="Processing games"):
         board = game.board()
 
-        for move in game.mainline_moves():
-            pass
+        for move, node in zip(game.mainline_moves(), game.mainline()):
+            board.push(move)
+            encoded_board = encode_board(board)
+            eval = extract_eval(board, node.comment)
+            data.append((encoded_board, eval))
+
+    df = pd.DataFrame(data, columns=['Board', 'Evaluation'])
+    df.to_csv(save_path, index=False)
+    
+    logging.info(f"Processed {len(data)} board states.")
 
 
+"""
+Extracts a list of games and creates a pandas dataframe
+Saves it into a csv for further processing. Multi-threaded implementation.
+
+Example: multi_thread_preprocess_games('data/raw/sample.pgn', 'data/raw/sample.csv')
+"""
+def multi_thread_preprocess_games(file_path, save_boards_path, save_evals_path, num_games=float('inf')):
+    logging.info(f"Prepreoccesing PGN at {file_path} to save a npy file at {save_boards_path} and {save_evals_path}")
+
+    games = process_pgn(file_path, num_games)
+    encoded_boards = []
+    evaluations = []
+
+    with ThreadPoolExecutor() as executor:
+        results = list(tqdm(executor.map(process_game, enumerate(games)), total=len(games), desc="Processing games"))
+
+        for boards, evals in results:
+            encoded_boards.extend(boards)
+            evaluations.extend(evals)
+
+    
+    logging.info(f"Processed {len(encoded_boards)} board states.")
+
+    encoded_boards = np.array(encoded_boards)
+    evaluations = np.array(evaluations)
+
+    np.save(save_boards_path, encoded_boards)
+    np.save(save_evals_path, evaluations)
+
+    # df = pd.DataFrame(data, columns=['Board', 'Evaluation'])
+    # df.to_csv(save_path, index=False)
 
 
+"""
+This function processes only a single game which allows for multi-threaded execution without race conditions. 
+Allow the multithreaded ThreadPoolExecutor to concurrently process multiple games.
+"""
+def process_game(game_tup):
+    game_num, game = game_tup
+    board = game.board()
+    thread_id = threading.get_ident()
+
+    encoded_boards = []
+    evaluations = []
+
+    logging.info(f"Process {thread_id} is processing game {game_num}")
+
+    for move, node in zip(game.mainline_moves(), game.mainline()):
+        board.push(move)
+        encoded_board = encode_board(board)
+        eval = extract_eval(board, node.comment)
+
+        encoded_boards.append(encoded_board)
+        evaluations.append(eval)
+
+    
+    return encoded_boards, evaluations
+
+# with open("data/raw/sample.pgn") as pgn:
+#     # multi_thread_preprocess_games('data/raw/sample.pgn', 'data/processed/sample.csv', num_games=1)
+#     preprocess_games('data/raw/sample.pgn', 'data/processed/sample.csv', num_games=1)
 
 
+# file_path = "data/raw/sample.pgn"
+# save_path_boards = "data/processed/sample_boards.npy"
+# save_path_evals = "data/processed/sample_evals.npy"
+
+# # Uncomment to run the function
+# multi_thread_preprocess_games(file_path, save_path_boards, save_path_evals, num_games=3)

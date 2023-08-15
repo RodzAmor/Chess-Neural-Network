@@ -2,9 +2,13 @@ import chess.pgn
 
 
 # File used to experiment with basic commands and learn the libraries used
-with open('sample.pgn') as pgn_file:
+with open('data/raw/sample.pgn') as pgn_file:
     first_game = chess.pgn.read_game(pgn_file)
-    print(first_game.headers['Event'])
+    
+    for move in first_game.mainline():
+        # print(move.eval())
+        # print(move)
+        pass
 
-    moves = list(first_game.mainline_moves())
+    moves = list(first_game.mainline())
     print(moves)

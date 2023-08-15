@@ -2,6 +2,8 @@
 
 The Chess Neural Network is a machine learning based chess engine that uses a neural networks to evaluate positions and then uses the Minimax algorithm to perform the decision making. In Chess, the term "adoption" refers to the concept of winning against a person for 10 consecutive games. With that in mind, my primary goal for this project is to create a chess engine that is good enough to "adopt" me. I have not set an ELO goal in mind but as I test different models and optimize the program, I will likely add a ELO goal for the model and test it on Lichess bots.
 
+Some useful papers that helped me throughout the process of developing this project is ["DeepChess: End-to-End Deep Neural Network for Automatic Learning in Chess"](https://arxiv.org/pdf/1711.09667.pdf) by Barak Oshri and Nishith Khandwala and ["Learning to Play Chess with Minimal Lookahead and Deep Value Neural Networks"](https://www.researchgate.net/publication/321028267_Learning_to_Play_Chess_with_Minimal_Lookahead_and_Deep_Value_Neural_Networks) by Matthia Sabatelli.
+
 This project was inspired by Sebastian Lague and his chess series as well as from my CMSC 320 Data Science class at UMD. Thank you!
 
 
@@ -9,9 +11,11 @@ This project was inspired by Sebastian Lague and his chess series as well as fro
 
 - [Features](#features)
 - [Installation](#installation)
+- [Data Source](#data-source)
+- [Exploratory Data Analysis](#exploratory-data-analysis)
 - [Usage](#usage)
 - [Data Preprocessing](#data-preprocessing)
-- [Training the Model](#training-the-model)
+- [Play the Chess Engine](#play-the-chess-engine)
 
 ## Features
 
@@ -23,11 +27,17 @@ This project was inspired by Sebastian Lague and his chess series as well as fro
 
 ## Data Source
 
-The game data used in this project was obtained from [lichess open databases](https://database.lichess.org/). I used May 2023 in order to have over 100 million games which I split for 80% training and 20% testing. I also data obtained all my games that I played on my Lichess account (SteveMAlt) to build a model based on my playing style. However, my data set is much smaller than the open databases.
+The game data used in this project was obtained from [lichess open databases](https://database.lichess.org/). I used May 2023 in order to have a data set size of over 100 million games. I also included a smaller Lichess dataset of ~100 thousand games from January 2013 which is used a sample for experimenting with the data and ensuring the program works as expected before training the larger model.
+
+I also data obtained all my games that I played on my Lichess account, [SteveMAlt](https://lichess.org/@/SteveMAlt) to build a model based on my playing style. However, my data set is much smaller than the open databases.
 
 ## Exploratory Data Analysis
 
-Before building the model, I performed some exploratory data analysis on the pgn files in order to get an idea of the data and how to build a streamlined pipline for the data science process. I analyzed basic statistics on the games played as well as viewed the distribution of the player ratings. You can find more from the exploratory data analysis notebook. <!-- as well as in the pdf uploaded in my website. NOT COMPLETED YET --> 
+Before building the model, I performed some exploratory data analysis on the pgn files in order to get an idea of the data and how to build a streamlined pipline for the data science process. I analyzed basic statistics on the games played as well as viewed the distribution of the player ratings. <!--You can find more from the exploratory data analysis notebook as well as in the pdf uploaded in my website. NOT COMPLETED YET --> 
+
+## Data Preprocessing
+
+According to the Lichess database website, only 6% of the pgn games have the evaluation score included. As a result, I had to both cases differently. For games with an eval included, I just used the evaluation score provided. However, for games that did not have it, I used the latest stockfish engine as of August 2023 to evaluate the position and manually add the evaluation score as a label.
 
 ## Installation
 
@@ -39,9 +49,9 @@ cd chess-neural-network
 pip install -r requirements.txt
 ```
 
-## Usage
+## Play the Chess Engine
 
-Still a WIP.
+You can play the Chess Neural Network with differing levels of difficulty on my website, [RodzAmor.com/chess](RodzAmor.com/chess).
 
 
 ## Contributing

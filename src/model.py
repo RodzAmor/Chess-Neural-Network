@@ -69,8 +69,8 @@ def evaluate_model(model, X_test, y_test):
     pass
 
 if __name__ == "__main__":
-    board_path = "data/processed/sample_boards.npy"
-    evals_path = "data/processed/sample_evals.npy"
+    board_path = "data/processed/1000_games_boards.npy"
+    evals_path = "data/processed/1000_games_evals.npy"
     boards, evals = load_data(board_path, evals_path)
 
     # Splitting data (you can use the previously defined split_data function)
@@ -81,4 +81,4 @@ if __name__ == "__main__":
     history = train_model(model, X_train, y_train, X_val, y_val)
     # evaluate_model(model, X_test, y_test)
 
-    model.save('test.h5')
+    model.save('1000_games.h5')

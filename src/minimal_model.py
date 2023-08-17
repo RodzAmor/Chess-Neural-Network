@@ -6,6 +6,7 @@ import tensorflow as tf
 class MinimalChessModel:
     def __init__(self, model_path):
         self.model = load_model(model_path)
+        # self.transposition_table = {}
 
     def find_move(self, board, depth=3):
             maximizing_player = board.turn == chess.WHITE
@@ -18,7 +19,13 @@ class MinimalChessModel:
         if depth == 0 or board.is_game_over():
             return self.evaluate_board2(self.fast_encode(board)), None
         
+        # position_key = board.board_fen()
+        # if position_key in self.transposition_table:
+        #     return self.transposition_table[position_key]
+        
+
         legal_moves = list(board.legal_moves)
+        legal_moves.sort(key=lambda move: -board.is_capture(move)) # Move ordering
         best_move = None
 
         if maximizing_player:
@@ -38,7 +45,8 @@ class MinimalChessModel:
 
                 if beta <= alpha:
                     break
-
+            
+            # self.transposition_table[position_key] = (maxEval, best_move)
             return maxEval, best_move
         else:
             minEval = float('inf')
@@ -57,6 +65,7 @@ class MinimalChessModel:
                 if beta <= alpha:
                     break
 
+            # self.transposition_table[position_key] = (minEval, best_move)
             return minEval, best_move
 
     @tf.function

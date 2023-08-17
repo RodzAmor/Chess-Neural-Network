@@ -29,7 +29,7 @@ def make_move():
     process = psutil.Process(os.getpid())
     start_memory = process.memory_info().rss / 1024 / 1024 # Memory is in megabytes
 
-    profiler.start()
+    # profiler.start()
 
     board_fen = request.json['board']
     model_name = request.json['model']
@@ -47,8 +47,8 @@ def make_move():
     end_memory = process.memory_info().rss / 1024 / 1024
     memory_used = end_memory - start_memory
 
-    profiler_result = profiler.stop()
-    profiler.save('./logs', profiler_result)
+    # profiler_result = profiler.stop()
+    # profiler.save('./logs', profiler_result)
 
     print(f"Execution time: {execution_time} ms")
     print(f"Memory Usage: {memory_used} mb")

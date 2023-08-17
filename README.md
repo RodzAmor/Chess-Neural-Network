@@ -12,18 +12,19 @@ This project was inspired by Sebastian Lague and his chess series as well as fro
 - [Features](#features)
 - [Installation](#installation)
 - [Data Source](#data-source)
-- [Exploratory Data Analysis](#exploratory-data-analysis)
+<!-- - [Exploratory Data Analysis](#exploratory-data-analysis) -->
 - [Usage](#usage)
 - [Data Preprocessing](#data-preprocessing)
+- [Neural Network Architecture](#neural-network-architecture)
 - [Play the Chess Engine](#play-the-chess-engine)
 
 ## Features
 
 - Neural network-based position evaluation.
-- Minimax algorithm for decision making.
+- Minimax algorithm with alpha beta pruning for searching optimal moves.
 - Training on large datasets with historical chess games.
 - Also trained a model based on my own Lichess games.
-- Evaluation and playing against human or computer opponents to determine ELO.
+<!-- - Evaluation and playing against human or computer opponents to determine ELO. -->
 
 ## Data Source
 
@@ -31,13 +32,13 @@ The game data used in this project was obtained from [lichess open databases](ht
 
 I also data obtained all my games that I played on my Lichess account, [SteveMAlt](https://lichess.org/@/SteveMAlt) to build a model based on my playing style. However, my data set is much smaller than the open databases.
 
-## Exploratory Data Analysis
+<!-- ## Exploratory Data Analysis
 
-Before building the model, I performed some exploratory data analysis on the pgn files in order to get an idea of the data and how to build a streamlined pipline for the data science process. I analyzed basic statistics on the games played as well as viewed the distribution of the player ratings. <!--You can find more from the exploratory data analysis notebook as well as in the pdf uploaded in my website. NOT COMPLETED YET --> 
+Before building the model, I performed some exploratory data analysis on the pgn files in order to get an idea of the data and how to build a streamlined pipline for the data science process. I analyzed basic statistics on the games played as well as viewed the distribution of the player ratings. You can find more from the exploratory data analysis notebook as well as in the pdf uploaded in my website. NOT COMPLETED YET  -->
 
 ## Data Preprocessing
 
-According to the Lichess database website, only 6% of the pgn games have the evaluation score included. As a result, I had to both cases differently. For games with an eval included, I just used the evaluation score provided. However, for games that did not have it, I used the latest stockfish engine as of August 2023 to evaluate the position and manually add the evaluation score as a label.
+In order to provide each chess board with a corresponding evaluation score that will be use as training features for the neural netowrk, I used the latest stockfish engine as of August 2023 to evaluate the position and manually add the evaluation score as a label. Essentially, for every board state for each game in the PGN, I used the stockfish engine and manually added the labels to the data. By doing so, I was able to get several hundreds of thousands of chess boards along with their evaluation. The scores and boards are stored in a separate numpy files but have the same number of records.
 
 ## Installation
 
@@ -48,6 +49,13 @@ git clone https://github.com/rodzamor/chess-neural-network.git
 cd chess-neural-network
 pip install -r requirements.txt
 ```
+
+## Neural Network Architecture
+
+Still a WIP
+1000 epochs
+Early Stopping
+Conv2D
 
 ## Play the Chess Engine
 

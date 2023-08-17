@@ -1,9 +1,11 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from data_preparation import load_data, split_data
+# from keras.optimizers import Adam
+# from tf.keras.optimizers.legacy import Adam
 
 """
 Build the neural network.
@@ -12,18 +14,27 @@ Build the neural network.
 Still deciding on the architecture so I will save this later.
 """
 def build_model():
+    # nn_model = Sequential([
+    #     Conv2D(32, (3, 3), activation="relu", input_shape=(8, 8, 13)),
+    #     MaxPooling2D((2, 2)),
+    #     Conv2D(32, (3, 3), activation="relu"),
+    #     Flatten(),
+    #     Dense(64, activation="relu"),
+    #     Dense(1)
+    # ])
     nn_model = Sequential([
-        Conv2D(32, (3, 3), activation="relu", input_shape=(8, 8, 13)),
-        MaxPooling2D((2, 2)),
-        Conv2D(32, (3, 3), activation="relu"),
+        Conv2D(64, (3, 3), activation='relu', padding='same', input_shape=(8, 8, 13)),
+        Conv2D(128, (3, 3), activation='relu', padding='same'),
+        MaxPooling2D(2, 2),
         Flatten(),
-        Dense(64, activation="relu"),
-        Dense(1)
+        Dense(256, activation='relu'),
+        Dense(128, activation='relu'),
+        Dense(1, activation='linear')
     ])
 
     print(nn_model.summary())
     
-    nn_model.compile(optimizer='adam', loss='mean_squared_error')
+    nn_model.compile(optimizer='adam', loss='mse')
     # model.compile(optimizer='adam', loss='mean_squared_error', metrics=[])
     
     return nn_model
@@ -53,12 +64,12 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs=100000, batch_size
 """
 Train the model and save the history throughout the process
 """
-def train_model_history(model, X_train, y_train, X_val, y_val, epochs=100000, batch_size=32):
+def train_model_history(model, X_train, y_train, X_val, y_val, epochs=1000, batch_size=64):
     callbacks = [
-        EarlyStopping(patience=10, restore_best_weights=True),
-        ModelCheckpoint("model_checkpoint.h5", save_best_only=True)
+        EarlyStopping(min_delta=0.001, patience=10, restore_best_weights=True, verbose=1),
+        ModelCheckpoint("model_checkpoint.Keras", save_best_only=True)
     ]
-    history_trained_model = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=(X_val, y_val), callbacks=callbacks)
+    history_trained_model = model.fit(x=X_train, y=y_train, epochs=epochs, verbose=1, batch_size=batch_size, validation_data=(X_val, y_val), callbacks=callbacks)
 
     return history_trained_model
 
@@ -66,11 +77,13 @@ def train_model_history(model, X_train, y_train, X_val, y_val, epochs=100000, ba
 Evaluates the accuracy and loss of the model based on the evals from the test data.
 """
 def evaluate_model(model, X_test, y_test):
-    pass
+    loss = model.evaluate(X_test, y_test)
+    print("Loss:", loss)
+    return loss
 
 if __name__ == "__main__":
-    board_path = "data/processed/1000_games_boards.npy"
-    evals_path = "data/processed/1000_games_evals.npy"
+    board_path = "data/processed/my_games_boards.npy"
+    evals_path = "data/processed/my_games_evals.npy"
     boards, evals = load_data(board_path, evals_path)
 
     # Splitting data (you can use the previously defined split_data function)
@@ -81,4 +94,4 @@ if __name__ == "__main__":
     history = train_model_history(model, X_train, y_train, X_val, y_val)
     # evaluate_model(model, X_test, y_test)
 
-    model.save('1000_games')
+    model.save('personal_model')

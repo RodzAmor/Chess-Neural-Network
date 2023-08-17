@@ -23,10 +23,10 @@ def build_model():
 
     print(nn_model.summary())
     
-    model.compile(optimizer='adam', loss='mean_squared_error')
+    nn_model.compile(optimizer='adam', loss='mean_squared_error')
     # model.compile(optimizer='adam', loss='mean_squared_error', metrics=[])
     
-    return model
+    return nn_model
 
 
 """
@@ -44,7 +44,7 @@ Moved to data_preparation.py
 """
 Train the model with the training data
 """
-def train_model(model, X_train, y_train, X_val, y_val, epochs=10, batch_size=32):
+def train_model(model, X_train, y_train, X_val, y_val, epochs=100000, batch_size=32):
     trained_model = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size)
     
     return trained_model
@@ -53,7 +53,7 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs=10, batch_size=32)
 """
 Train the model and save the history throughout the process
 """
-def train_model_history(model, X_train, y_train, X_val, y_val, epochs=10, batch_size=32):
+def train_model_history(model, X_train, y_train, X_val, y_val, epochs=100000, batch_size=32):
     callbacks = [
         EarlyStopping(patience=10, restore_best_weights=True),
         ModelCheckpoint("model_checkpoint.h5", save_best_only=True)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
     # Building, training, and evaluating the model
     model = build_model()
-    history = train_model(model, X_train, y_train, X_val, y_val)
+    history = train_model_history(model, X_train, y_train, X_val, y_val)
     # evaluate_model(model, X_test, y_test)
 
-    model.save('1000_games.h5')
+    model.save('1000_games')

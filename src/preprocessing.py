@@ -101,8 +101,8 @@ Uses the stockfish engine as of August 2023 for games that do not have the stock
 @return float of stockfish evaluation score from white's perspective
 """
 def get_stockfish_eval(boards):
-    # stockfish = "/opt/homebrew/bin/stockfish"
-    stockfish = "data\stockfish\stockfish-windows-x86-64-avx2.exe"
+    stockfish = "/opt/homebrew/bin/stockfish"
+    # stockfish = "data\stockfish\stockfish-windows-x86-64-avx2.exe"
     eval_time = 0.1 # Feel free to modify for longer evaluation of positions
     scores = []
 
@@ -185,87 +185,54 @@ def multi_thread_preprocess_games(file_path, save_boards_path, save_evals_path, 
 This function processes only a single game which allows for multi-threaded execution without race conditions. 
 Allow the multithreaded ThreadPoolExecutor to concurrently process multiple games.
 """
-# def process_game(game_tup):
-#     game_num, game = game_tup
-#     board = game.board()
-#     thread_id = threading.get_ident()
-
-#     encoded_boards = []
-#     evaluations = []
-#     boards_to_analyze = []
-#     labels = []
-
-#     logging.info(f"Process {thread_id} is processing game {game_num}")
-
-#     # for move, node in zip(game.mainline_moves(), game.mainline()):
-#     #     board.push(move)
-#     #     encoded_board = encode_board(board)
-#     #     # eval = extract_eval(board, node.comment)
-
-#     #     encoded_boards.append(encoded_board)
-#     #     evaluations.append(node.comment)
-#     #     boaboards_to_analyzerds
-
-    
-#     # return encoded_boards, evaluations
-#     for move, node in zip(game.mainline_moves(), game.mainline()):
-#             board.push(move)
-#             encoded_board = encode_board(board)
-#             encoded_boards.append(encoded_board)
-#             labels.append(node.comment)
-#             boards_to_analyze.append(board.copy())
-
-#     evaluations = [extract_eval(board, label) for board, label in zip(boards_to_analyze, labels)]
-        
-#     return encoded_boards, evaluations
-
-def extract_eval(label, stockfish_eval=None):
-    if "#" in label:
-        if label[1] == "-": # Checkmate for black
-            return -1000
-        else:
-            return 1000
-
-    eval = re.search(r'\[%eval (.*?)\]', label)
-
-    if eval != None:
-        return float(eval.group(1))
-    else:
-        return stockfish_eval
-
-
 def process_game(game_tup):
     game_num, game = game_tup
     board = game.board()
-    thread_id = threading.get_ident()
-    encoded_boards = []
-    boards_to_analyze = []
-    labels = []
 
+    thread_id = threading.get_ident()
     logging.info(f"Process {thread_id} is processing game {game_num}")
 
-    for move, node in zip(game.mainline_moves(), game.mainline()):
+    encoded_boards = []
+    boards_to_analyze = []
+
+    for move in game.mainline_moves():
         board.push(move)
-        encoded_board = encode_board(board)
+        encoded_board = encode_board
         encoded_boards.append(encoded_board)
-        labels.append(node.comment)
-        if '[%eval' not in node.comment: # Only analyze if the evaluation is not in the comment
-            boards_to_analyze.append(board.copy())
+        boards_to_analyze.append(board.copy())
 
     stockfish_evaluations = get_stockfish_eval(boards_to_analyze)
-    evaluations = [extract_eval(label, stockfish_eval) for label, stockfish_eval in zip(labels, stockfish_evaluations)]
 
-    return encoded_boards, evaluations
+    return encoded_boards, stockfish_evaluations
+
+"""
+Made obsolete, decided to just re-evaluate everything regardless of if it already has evals.
+"""
+# def extract_eval(label, stockfish_eval=None):
+#     if "#" in label:
+#         if label[1] == "-": # Checkmate for black
+#             return -1000
+#         else:
+#             return 1000
+
+#     eval = re.search(r'\[%eval (.*?)\]', label)
+
+#     if eval != None:
+#         return float(eval.group(1))
+#     else:
+#         return stockfish_eval
+
 
 
 
 
 if __name__ == "__main__":
-    file_path = "data/raw/may_2023_database.pgn"
+    file_path = "data/raw/sample.pgn"
+    # file_path = "data/raw/may_2023_database.pgn"
     # save_path_boards = "data/processed/10000_games_boards.npy"
     # save_path_evals = "data/processed/10000_games_evals.npy"
-    save_path_boards = "data/processed/1000_games_boards.npy"
-    save_path_evals = "data/processed/1000_games_evals.npy"
+    save_path_boards = "data/processed/sample_games_boards.npy"
+    save_path_evals = "data/processed/sample_games_evals.npy"
 
     # Uncomment to run the function
-    multi_thread_preprocess_games(file_path, save_path_boards, save_path_evals, num_games=1000)
+    multi_thread_preprocess_games(file_path, save_path_boards, save_path_evals, num_games=3)

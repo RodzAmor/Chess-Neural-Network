@@ -84,7 +84,3 @@ class MinimalChessModel:
 
         return encoded_board.reshape((1, 8, 8, 13))
     
-
-@tf.function
-def predict(self, encoded_board):
-    return self.model(encoded_board)

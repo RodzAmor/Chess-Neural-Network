@@ -1,0 +1,61 @@
+Depth = 3
+Player is White and plays e4
+Chess Bot is playing Black
+
+# Without @tf.function using normal function
+Execution time: 40256.935358047485 ms
+Memory Usage: 258.546875 mb
+Execution time: 36437.10899353027 ms
+Memory Usage: 188.984375 mb
+Execution time: 37126.86896324158 ms
+Memory Usage: 228.84375 mb
+Execution time: 36706.512212753296 ms
+Memory Usage: 423.015625 mb
+Execution time: 37838.948011398315 ms
+Memory Usage: 549.1875 mb
+
+## Without @tf.function using Minimal Model
+Execution time: 38159.69181060791 ms
+Memory Usage: 348.4375 mb
+Execution time: 36098.21605682373 ms
+Memory Usage: 588.03125 mb
+Execution time: 37815.3338432312 ms
+Memory Usage: 379.96875 mb
+
+# With @tf.function using Minimal Model
+Execution time: 517.2641277313232 ms
+Memory Usage: 52.359375 mb
+Execution time: 480.02004623413086 ms
+Memory Usage: 75.53125 mb
+Execution time: 480.5450439453125 ms
+Memory Usage: 7.859375 mb
+Execution time: 483.66737365722656 ms
+Memory Usage: 76.734375 mb
+
+## Depth of 4 using @tf.function
+Execution time: 2572.4053382873535 ms
+Memory Usage: 223.921875 mb
+Execution time: 2585.322141647339 ms
+Memory Usage: 75.15625 mb
+Execution time: 2579.2012214660645 ms
+Memory Usage: 79.640625 mb
+Execution time: 2669.865846633911 ms
+Memory Usage: 79.296875 mb
+
+## Depth of 5 using @tf.function
+Execution time: 10405.150890350342 ms
+Memory Usage: -41.59375 mb ?????? HUH
+Execution time: 10371.641159057617 ms
+Memory Usage: 65.5 mb
+Execution time: 10653.694868087769 ms
+Memory Usage: 15.859375 mb
+Execution time: 11255.757093429565 ms
+Memory Usage: -24.859375 mb
+
+## Depth of 6 using @tf.function
+Execution time: 197402.7636051178 ms ### Note: instead of Kf5, it chose Kc5
+Memory Usage: -49.34375 mb
+Execution time: 190002.06112861633 ms
+Memory Usage: -41.578125 mb
+Execution time: 191848.31380844116 ms
+Memory Usage: 28.828125 mb

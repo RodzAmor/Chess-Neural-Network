@@ -16,7 +16,7 @@ Uses the Minimax algorithm to evaluate the state of the board for many possibili
 """
 def minimax_alpha_beta(board: chess.Board, model, depth, alpha, beta, maximizing_player):
     if depth == 0 or board.is_game_over():
-        return evaluate_board(board, model), None
+        return evaluate_board(fast_encode(board), model), None
     
     legal_moves = list(board.legal_moves)
     best_move = None
@@ -69,9 +69,8 @@ Uses the neural network model from the parameter to evaluate the position
 
 @return         Returns the board evalution
 """
-def evaluate_board(board, model):
-    encoded_board = fast_encode(board)
-
+def evaluate_board(encoded_board, model):
+    # encoded_board = fast_encode(board)
     evaluate = model.predict(encoded_board)
     # evaluate = model.predict(encoded_board, verbose=0)
 

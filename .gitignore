@@ -4,3 +4,4 @@ processed/
 raw/
 venv/
 .vercel
+__pycache__

@@ -1,5 +1,7 @@
 import tensorflow as tf
 import numpy as np
+import wandb
+from wandb.keras import WandbCallback
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -67,7 +69,8 @@ Train the model and save the history throughout the process
 def train_model_history(model, X_train, y_train, X_val, y_val, epochs=1000, batch_size=64):
     callbacks = [
         EarlyStopping(min_delta=0.001, patience=10, restore_best_weights=True, verbose=1),
-        ModelCheckpoint("model_checkpoint.Keras", save_best_only=True)
+        ModelCheckpoint("model_checkpoint.Keras", save_best_only=True),
+        WandbCallback()
     ]
     history_trained_model = model.fit(x=X_train, y=y_train, epochs=epochs, verbose=1, batch_size=batch_size, validation_data=(X_val, y_val), callbacks=callbacks)
 
@@ -82,9 +85,15 @@ def evaluate_model(model, X_test, y_test):
     return loss
 
 if __name__ == "__main__":
-    board_path = "data/processed/my_games_boards.npy"
-    evals_path = "data/processed/my_games_evals.npy"
+    run = wandb.init(project="chess-model", config = {
+        "epochs": 1000,
+        "batch_size": 64,
+    })
+
+    board_path = "data/processed/1000_games_boards.npy"
+    evals_path = "data/processed/1000_games_evals.npy"
     boards, evals = load_data(board_path, evals_path)
+
 
     # Splitting data (you can use the previously defined split_data function)
     X_train, X_val, X_test, y_train, y_val, y_test = split_data(boards, evals)
@@ -94,4 +103,6 @@ if __name__ == "__main__":
     history = train_model_history(model, X_train, y_train, X_val, y_val)
     # evaluate_model(model, X_test, y_test)
 
-    model.save('personal_model')
+    model.save('1000_games_model')
+
+    run.finish()

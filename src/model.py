@@ -1,108 +1,97 @@
-import tensorflow as tf
+import chess
 import numpy as np
-import wandb
-from wandb.keras import WandbCallback
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from data_preparation import load_data, split_data
-# from keras.optimizers import Adam
-# from tf.keras.optimizers.legacy import Adam
+from tensorflow.keras.models import load_model
+import tensorflow as tf
 
-"""
-Build the neural network.
+class MinimalChessModel:
+    def __init__(self, model_path):
+        self.model = load_model(model_path)
+        # self.transposition_table = {}
 
-*** NOTE *** 
-Still deciding on the architecture so I will save this later.
-"""
-def build_model():
-    # nn_model = Sequential([
-    #     Conv2D(32, (3, 3), activation="relu", input_shape=(8, 8, 13)),
-    #     MaxPooling2D((2, 2)),
-    #     Conv2D(32, (3, 3), activation="relu"),
-    #     Flatten(),
-    #     Dense(64, activation="relu"),
-    #     Dense(1)
-    # ])
-    nn_model = Sequential([
-        Conv2D(64, (3, 3), activation='relu', padding='same', input_shape=(8, 8, 13)),
-        Conv2D(128, (3, 3), activation='relu', padding='same'),
-        MaxPooling2D(2, 2),
-        Flatten(),
-        Dense(256, activation='relu'),
-        Dense(128, activation='relu'),
-        Dense(1, activation='linear')
-    ])
+    def find_move(self, board, depth=3):
+            maximizing_player = board.turn == chess.WHITE
+            
+            centipawn, best_move = self.minimax_alpha_beta(board, depth, float('-inf'), float('inf'), maximizing_player=maximizing_player)
+            print(centipawn, best_move)
+            return centipawn, best_move    
 
-    print(nn_model.summary())
+    def minimax_alpha_beta(self, board: chess.Board, depth, alpha, beta, maximizing_player):
+        if depth == 0 or board.is_game_over():
+            return self.evaluate_board2(self.fast_encode(board)), None
+        
+        # position_key = board.board_fen()
+        # if position_key in self.transposition_table:
+        #     return self.transposition_table[position_key]
+        
+
+        legal_moves = list(board.legal_moves)
+        legal_moves.sort(key=lambda move: -board.is_capture(move)) # Move ordering
+        best_move = None
+
+        if maximizing_player:
+            maxEval = float('-inf')
+
+            for move in legal_moves:
+                board.push(move)
+                eval, _ = self.minimax_alpha_beta(board, depth - 1, alpha, beta, False)
+                board.pop()
+                # maxEval = max(maxEval, eval)
+
+                if eval > maxEval:
+                    maxEval = eval
+                    best_move = move
+
+                alpha = max(alpha, eval)
+
+                if beta <= alpha:
+                    break
+            
+            # self.transposition_table[position_key] = (maxEval, best_move)
+            return maxEval, best_move
+        else:
+            minEval = float('inf')
+
+            for move in legal_moves:
+                board.push(move)
+                eval, _ = self.minimax_alpha_beta(board, depth - 1, alpha, beta, True)
+                board.pop()
+                # minEval = min(minEval, eval)
+
+                if eval < minEval:
+                    minEval = eval
+                    best_move = move
+
+                beta = min(beta, eval)
+                if beta <= alpha:
+                    break
+
+            # self.transposition_table[position_key] = (minEval, best_move)
+            return minEval, best_move
+
+    @tf.function
+    def evaluate_board2(self, encoded_board):
+        return self.model(encoded_board, training=False)
+
+    def evaluate_board(self, encoded_board):
+        return self.model.predict(encoded_board)
+
+    # Function to encode a chess board to a tensor
+    def fast_encode(self, board):
+        piece_index = {
+            'P': 0, 'R': 1, 'N': 2, 'B': 3, 'Q': 4, 'K': 5,  # White Pieces
+            'p': 0, 'r': 1, 'n': 2, 'b': 3, 'q': 4, 'k': 5  # Black Pieces (will use negative values)
+        }
+
+        encoded_board = np.zeros((8, 8, 6))  # Initialize with zeros
+
+        # Fill the values of each tensor
+        for i in range(8):
+            for j in range(8):
+                piece = board.piece_at(chess.square(j, 7 - i))
+                if piece:
+                    # If it's a white piece, set value to 1. If black, set to -1.
+                    value = 1 if piece.symbol().isupper() else -1
+                    encoded_board[i, j, piece_index[piece.symbol()]] = value
+
+        return encoded_board.reshape(1, 8, 8, 6)
     
-    nn_model.compile(optimizer='adam', loss='mse')
-    # model.compile(optimizer='adam', loss='mean_squared_error', metrics=[])
-    
-    return nn_model
-
-
-"""
-Loads the data after the preprocessing step
-
-Moved to data_preparation.py
-"""
-# def load_data(board_path, evals_path):
-#     # Load the encoded chessboards and evaluations
-#     boards = np.load(board_path, allow_pickle=True)
-#     evals = np.load(evals_path, allow_pickle=True)
-
-#     return boards, evals
-
-"""
-Train the model with the training data
-"""
-def train_model(model, X_train, y_train, X_val, y_val, epochs=100000, batch_size=32):
-    trained_model = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size)
-    
-    return trained_model
-    
-
-"""
-Train the model and save the history throughout the process
-"""
-def train_model_history(model, X_train, y_train, X_val, y_val, epochs=1000, batch_size=64):
-    callbacks = [
-        EarlyStopping(min_delta=0.001, patience=10, restore_best_weights=True, verbose=1),
-        ModelCheckpoint("model_checkpoint.Keras", save_best_only=True),
-        WandbCallback()
-    ]
-    history_trained_model = model.fit(x=X_train, y=y_train, epochs=epochs, verbose=1, batch_size=batch_size, validation_data=(X_val, y_val), callbacks=callbacks)
-
-    return history_trained_model
-
-"""
-Evaluates the accuracy and loss of the model based on the evals from the test data.
-"""
-def evaluate_model(model, X_test, y_test):
-    loss = model.evaluate(X_test, y_test)
-    print("Loss:", loss)
-    return loss
-
-if __name__ == "__main__":
-    run = wandb.init(project="chess-model", config = {
-        "epochs": 1000,
-        "batch_size": 64,
-    })
-
-    board_path = "data/processed/1000_games_boards.npy"
-    evals_path = "data/processed/1000_games_evals.npy"
-    boards, evals = load_data(board_path, evals_path)
-
-
-    # Splitting data (you can use the previously defined split_data function)
-    X_train, X_val, X_test, y_train, y_val, y_test = split_data(boards, evals)
-
-    # Building, training, and evaluating the model
-    model = build_model()
-    history = train_model_history(model, X_train, y_train, X_val, y_val)
-    # evaluate_model(model, X_test, y_test)
-
-    model.save('1000_games_model')
-
-    run.finish()

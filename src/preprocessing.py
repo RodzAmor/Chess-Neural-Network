@@ -57,7 +57,7 @@ def encode_board(board: chess.Board):
     # 6 black pieces + 6 white pieces + 1 empty slot = 13 possible tile states
     # As a result, the shape of each board state is 8x8x13 for the 8x8 grid and 13 possible states
     white_pieces = {piece: index for index, piece in enumerate("PRNBQK")}
-    black_pieces = {piece: index + 5 for index, piece in enumerate("prnbqk")}
+    black_pieces = {piece: index + 6 for index, piece in enumerate("prnbqk")}
     all_pieces = white_pieces | black_pieces # Concatenate the two dictionaries
 
     encoded_board = np.zeros((8, 8, 13))
@@ -113,7 +113,6 @@ def get_stockfish_eval(boards):
             games_evaluated += 1
 
             score = eval['score'].white().score(mate_score=1000) / 100.0 # centipawn
-            # print(board, score)
             # print(board, score)
             # logging.info(f"Performing Stockfish evaluation: {games_evaluated} board states evaluated. Eval: {score}")
         
@@ -230,13 +229,13 @@ Made obsolete, decided to just re-evaluate everything regardless of if it alread
 
 
 if __name__ == "__main__":
-    file_path = "data/raw/my_games.pgn"
+    file_path = "data/raw/sample.pgn"
     # file_path = "data/raw/may_2023_database.pgn"
-    # save_path_boards = "data/processed/10000_games_boards.npy"
-    # save_path_evals = "data/processed/10000_games_evals.npy"
-    save_path_boards = "data/processed/my_games_boards.npy"
-    save_path_evals = "data/processed/my_games_evals.npy"
+    save_path_boards = "data/processed/100_games_boards.npy"
+    save_path_evals = "data/processed/100_games_evals.npy"
+    save_path_boards = "data/processed/sample_games_boards.npy"
+    save_path_evals = "data/processed/sample_games_evals.npy"
 
     # Uncomment to run the function
     # multi_thread_preprocess_games(file_path, save_path_boards, save_path_evals, num_games=1000)
-    multi_thread_preprocess_games(file_path, save_path_boards, save_path_evals, num_games=100000)
+    multi_thread_preprocess_games(file_path, save_path_boards, save_path_evals, num_games=100)

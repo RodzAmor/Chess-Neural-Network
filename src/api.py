@@ -35,14 +35,15 @@ def make_move():
     model_name = request.json['model']
     depth = request.json['depth']
 
-    model_path = "data/models/" + model_name
+    # model_path = "data/models/" + model_name
+    model_path = "data/models/online.h5"
     model = MinimalChessModel(model_path)
     board = chess.Board(fen=board_fen)
     
     start_time = time.time()
 
     centipawn, move = model.find_move(board, depth=depth)
-
+    
     execution_time = (time.time() - start_time) * 1000
     end_memory = process.memory_info().rss / 1024 / 1024
     memory_used = end_memory - start_memory
@@ -52,7 +53,6 @@ def make_move():
 
     print(f"Execution time: {execution_time} ms")
     print(f"Memory Usage: {memory_used} mb")
-
 
     return jsonify(success=True, uci=move.uci(), game_over=board.is_game_over())
 

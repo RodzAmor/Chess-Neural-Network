@@ -2,7 +2,7 @@ import json
 import numpy as np
 import tensorflow as tf
 import chess
-from minimal_model import MinimalChessModel
+from model import ChessModel
 
 # model_file = '/opt/ml/models/test_chess_model'
 # model = tf.keras.models.load_model(model_file)
@@ -53,7 +53,7 @@ def lambda_handler(event, context):
         board = chess.Board(board_fen)
 
         model_path = "/opt/ml/models/" + model_name
-        chess_model = MinimalChessModel(model_path)
+        chess_model = ChessModel(model_path)
 
         centipawn, move = chess_model.find_move(board, depth=depth)
         

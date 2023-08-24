@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import tensorflow as tf
 
-class MinimalChessModel:
+class ChessModel:
     def __init__(self, model_path):
         self.model = load_model(model_path)
 
